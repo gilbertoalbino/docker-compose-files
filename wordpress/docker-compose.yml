@@ -1,0 +1,48 @@
+version: "3"
+# para configurar /etc/hosts
+# docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' armazem_web
+#
+# para se conectar ao mysql do laravel, usar o ip inspecionado de armazem_db
+# docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' armazem_db
+#
+services:
+  wp_db:
+    container_name: wp_db
+    image: mysql:5.7
+    volumes:
+      - ${PWD}/mysql:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      
+  wp_web:
+    container_name: wp_web
+    image: wordpress:latest 
+    volumes: 
+      - ${PWD}/html:/var/www/html
+      - ${PWD}/themes:/var/www/html/wp-content/themes
+      - ${PWD}/plugins:/var/www/html/wp-content/plugins
+      - ${PWD}/uploads:/var/www/html/wp-content/uploads 
+    ports:
+      - "8000:80"
+    links:
+      - wp_db
+    environment:
+      WORDPRESS_DB_HOST: wp_db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      
+  wp_my:
+    container_name: wp_my
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8084:80"
+    links:
+      - wp_db
+    environment:
+      MYSQL_USER: wordpress
+      MYSQL_ROOT_PASSWORD: wordpress
+      PMA_HOST: wp_db
